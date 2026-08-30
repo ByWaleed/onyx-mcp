@@ -3,7 +3,7 @@
 [![CI](https://github.com/ByWaleed/onyx-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ByWaleed/onyx-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-MCP Registry name: `io.github.bywaleed/onyx-mcp`
+MCP Registry name: `io.github.ByWaleed/onyx-mcp`
 
 A comprehensive, secure Model Context Protocol server for [Onyx](https://www.onyx.app/), formerly Danswer.
 
