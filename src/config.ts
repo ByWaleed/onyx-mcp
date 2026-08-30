@@ -6,14 +6,17 @@ const booleanValue = z
   .transform((value) => value === "true" || value === "1");
 
 const envSchema = z.object({
-  ONYX_API_URL: z.string().url().refine((value) => {
-    const url = new URL(value);
-    return (
-      url.protocol === "https:" ||
-      (url.protocol === "http:" &&
-        ["localhost", "127.0.0.1", "::1"].includes(url.hostname))
-    );
-  }, "ONYX_API_URL must use HTTPS unless it points to a loopback host"),
+  ONYX_API_URL: z
+    .string()
+    .url()
+    .refine((value) => {
+      const url = new URL(value);
+      return (
+        url.protocol === "https:" ||
+        (url.protocol === "http:" &&
+          ["localhost", "127.0.0.1", "::1"].includes(url.hostname))
+      );
+    }, "ONYX_API_URL must use HTTPS unless it points to a loopback host"),
   ONYX_API_TOKEN: z.string().min(1),
   ONYX_DEFAULT_PERSONA_ID: z.coerce.number().int().nonnegative().default(0),
   ONYX_MCP_ENABLE_WRITE: booleanValue,
@@ -26,6 +29,12 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(1_000_000),
+  ONYX_MCP_MAX_CONCURRENCY: z.coerce
+    .number()
+    .int()
+    .positive()
+    .max(100)
+    .default(8),
 });
 
 export interface Config {
@@ -38,6 +47,7 @@ export interface Config {
   enableRawApi: boolean;
   timeoutMs: number;
   maxResponseBytes: number;
+  maxConcurrency?: number;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -53,5 +63,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     enableRawApi: parsed.ONYX_MCP_ENABLE_RAW_API,
     timeoutMs: parsed.ONYX_MCP_TIMEOUT_MS,
     maxResponseBytes: parsed.ONYX_MCP_MAX_RESPONSE_BYTES,
+    maxConcurrency: parsed.ONYX_MCP_MAX_CONCURRENCY,
   };
 }

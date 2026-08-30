@@ -22,13 +22,19 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "version:sync": "node scripts/sync-version.mjs",
+    "build": "npm run version:sync && npm run clean && tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
-    "dev": "tsx src/index.ts",
+    "dev": "tsx src/cli.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
     "start": "node dist/cli.js",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "prepack": "npm run check && npm test && npm run build"
+    "verify": "npm run version:sync && npm run format:check && npm run lint && npm run check && npm test && npm run build",
+    "prepack": "npm run verify"
   },
   "engines": {
     "node": ">=20"
@@ -43,6 +49,11 @@
   ],
   "author": "Waleed Islam",
   "license": "MIT",
+  "packageManager": "npm@11.6.2",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ByWaleed/onyx-mcp.git"
@@ -56,9 +67,15 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.15.3",
+    "@vitest/coverage-v8": "^3.2.7",
+    "eslint": "^10.0.0",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.68.0",
     "vitest": "^3.1.2"
   }
 }

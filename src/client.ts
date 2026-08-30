@@ -1,53 +1,90 @@
 import type { Config } from "./config.js";
 import { OnyxApiError } from "./errors.js";
+import { getRequestSignal } from "./request-context.js";
 
 export interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   query?: Record<string, unknown>;
   body?: unknown;
-  headers?: Record<string, string>;
 }
 
 function addQuery(url: URL, query: Record<string, unknown>): void {
+  const serialize = (value: unknown): string =>
+    typeof value === "object" ? JSON.stringify(value) : String(value);
   for (const [key, value] of Object.entries(query)) {
     if (value === undefined || value === null || value === "") continue;
     if (Array.isArray(value)) {
-      for (const item of value) url.searchParams.append(key, String(item));
+      for (const item of value) url.searchParams.append(key, serialize(item));
     } else {
-      url.searchParams.set(key, String(value));
+      url.searchParams.set(key, serialize(value));
     }
   }
 }
 
 export class OnyxClient {
+  private activeRequests = 0;
+  private readonly waiters: Array<() => void> = [];
+
   constructor(
     private readonly config: Config,
     private readonly fetchImpl: typeof fetch = fetch,
   ) {}
+
+  private async acquire(signal?: AbortSignal): Promise<void> {
+    signal?.throwIfAborted();
+    if (this.activeRequests < (this.config.maxConcurrency ?? 8)) {
+      this.activeRequests += 1;
+      return;
+    }
+    await new Promise<void>((resolve, reject) => {
+      const resume = () => {
+        signal?.removeEventListener("abort", abort);
+        this.activeRequests += 1;
+        resolve();
+      };
+      const abort = () => {
+        const index = this.waiters.indexOf(resume);
+        if (index >= 0) this.waiters.splice(index, 1);
+        reject(new DOMException("The operation was aborted", "AbortError"));
+      };
+      this.waiters.push(resume);
+      signal?.addEventListener("abort", abort, { once: true });
+    });
+  }
+
+  private release(): void {
+    this.activeRequests -= 1;
+    this.waiters.shift()?.();
+  }
 
   async request<T = unknown>(
     path: string,
     options: RequestOptions = {},
   ): Promise<T> {
     const baseUrl = new URL(`${this.config.apiUrl}/`);
-    const url = new URL(
-      path.startsWith("/") ? path.slice(1) : path,
-      baseUrl,
-    );
+    const url = new URL(path.startsWith("/") ? path.slice(1) : path, baseUrl);
     const apiPrefix = baseUrl.pathname.endsWith("/")
       ? baseUrl.pathname
       : `${baseUrl.pathname}/`;
-    if (url.origin !== baseUrl.origin || !`${url.pathname}/`.startsWith(apiPrefix)) {
-      throw new Error("Onyx API path must stay within the configured API base URL");
+    if (
+      url.origin !== baseUrl.origin ||
+      !`${url.pathname}/`.startsWith(apiPrefix)
+    ) {
+      throw new Error(
+        "Onyx API path must stay within the configured API base URL",
+      );
     }
     if (options.query) addQuery(url, options.query);
 
+    const callerSignal = getRequestSignal();
+    callerSignal?.throwIfAborted();
+    await this.acquire(callerSignal);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
+    const abortFromCaller = () => controller.abort(callerSignal?.reason);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     const headers: Record<string, string> = {
       Accept: "application/json",
       Authorization: `Bearer ${this.config.apiToken}`,
-      ...options.headers,
     };
     let body: string | undefined;
     if (options.body !== undefined) {
@@ -56,6 +93,9 @@ export class OnyxClient {
     }
 
     try {
+      callerSignal?.throwIfAborted();
+      callerSignal?.addEventListener("abort", abortFromCaller, { once: true });
+      timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
       const requestInit: RequestInit = {
         method: options.method ?? "GET",
         headers,
@@ -127,11 +167,19 @@ export class OnyxClient {
     } catch (error) {
       if (error instanceof OnyxApiError) throw error;
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error(`Onyx request timed out after ${this.config.timeoutMs}ms`);
+        if (callerSignal?.aborted) {
+          throw new Error("Onyx request was cancelled", { cause: error });
+        }
+        throw new Error(
+          `Onyx request timed out after ${this.config.timeoutMs}ms`,
+          { cause: error },
+        );
       }
       throw error;
     } finally {
-      clearTimeout(timeout);
+      if (timeout !== undefined) clearTimeout(timeout);
+      callerSignal?.removeEventListener("abort", abortFromCaller);
+      this.release();
     }
   }
 }

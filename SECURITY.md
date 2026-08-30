@@ -2,7 +2,16 @@
 
 ## Reporting
 
-Report security issues privately through GitHub Security Advisories for this repository. Do not create a public issue for a suspected vulnerability.
+Report security issues privately through [GitHub Security Advisories](https://github.com/ByWaleed/onyx-mcp/security/advisories/new). Do not create a public issue for a suspected vulnerability.
+
+You should receive an acknowledgement within seven days. Resolution time depends on severity and complexity.
+
+## Supported Versions
+
+| Version        | Supported   |
+| -------------- | ----------- |
+| Latest release | Yes         |
+| Older releases | Best effort |
 
 ## Credential Safety
 

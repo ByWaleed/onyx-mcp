@@ -4,7 +4,11 @@ import { addTool } from "../register.js";
 import { filtersSchema } from "../schemas.js";
 import { runTool } from "../tool-helpers.js";
 
-export function registerChatTools({ server, client, config }: ToolContext): void {
+export function registerChatTools({
+  server,
+  client,
+  config,
+}: ToolContext): void {
   addTool(
     server,
     "onyx_list_chats",
@@ -17,7 +21,10 @@ export function registerChatTools({ server, client, config }: ToolContext): void
       before: z.string().datetime().optional(),
     },
     (args) =>
-      runTool(() => client.request("/chat/get-user-chat-sessions", { query: args })),
+      runTool(() =>
+        client.request("/chat/get-user-chat-sessions", { query: args }),
+      ),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -25,7 +32,10 @@ export function registerChatTools({ server, client, config }: ToolContext): void
     "Get a chat session and its message history.",
     { chat_session_id: z.string().uuid() },
     ({ chat_session_id }) =>
-      runTool(() => client.request(`/chat/get-chat-session/${chat_session_id}`)),
+      runTool(() =>
+        client.request(`/chat/get-chat-session/${chat_session_id}`),
+      ),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -37,6 +47,7 @@ export function registerChatTools({ server, client, config }: ToolContext): void
       page_size: z.number().int().positive().max(100).optional(),
     },
     (args) => runTool(() => client.request("/chat/search", { query: args })),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
 
   if (!config.enableWrite) return;
@@ -61,6 +72,7 @@ export function registerChatTools({ server, client, config }: ToolContext): void
           },
         }),
       ),
+    { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   );
   addTool(
     server,
@@ -95,6 +107,7 @@ export function registerChatTools({ server, client, config }: ToolContext): void
           },
         }),
       ),
+    { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
   );
   addTool(
     server,
@@ -107,6 +120,12 @@ export function registerChatTools({ server, client, config }: ToolContext): void
           method: "POST",
         }),
       ),
+    {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   );
   addTool(
     server,
@@ -119,19 +138,28 @@ export function registerChatTools({ server, client, config }: ToolContext): void
       predefined_feedback: z.string().max(500).optional(),
     },
     (body) =>
-      runTool(() =>
-        client.request("/chat/create-chat-message-feedback", {
+      runTool(() => {
+        if (body.is_positive === undefined && !body.feedback_text) {
+          throw new Error("is_positive or feedback_text is required");
+        }
+        return client.request("/chat/create-chat-message-feedback", {
           method: "POST",
           body,
-        }),
-      ),
+        });
+      }),
+    {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   );
 
   if (!config.enableDestructive) return;
   addTool(
     server,
     "onyx_delete_chat",
-    "Permanently delete one Onyx chat session. This action is destructive.",
+    "Delete one Onyx chat session according to the deployment's retention policy.",
     {
       chat_session_id: z.string().uuid(),
       confirm: z.literal(true).describe("Must be true to confirm deletion."),
@@ -142,5 +170,11 @@ export function registerChatTools({ server, client, config }: ToolContext): void
           method: "DELETE",
         }),
       ),
+    {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   );
 }

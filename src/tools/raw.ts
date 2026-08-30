@@ -4,7 +4,11 @@ import { addTool } from "../register.js";
 import { rawPathSchema } from "../schemas.js";
 import { runTool } from "../tool-helpers.js";
 
-export function registerRawApiTool({ server, client, config }: ToolContext): void {
+export function registerRawApiTool({
+  server,
+  client,
+  config,
+}: ToolContext): void {
   if (!config.enableRawApi) return;
 
   addTool(
@@ -23,13 +27,19 @@ export function registerRawApiTool({ server, client, config }: ToolContext): voi
         const mutating = method !== "GET";
         const destructive = method === "DELETE";
         if (!config.enableAdmin) {
-          throw new Error("Raw API requests require ONYX_MCP_ENABLE_ADMIN=true");
+          throw new Error(
+            "Raw API requests require ONYX_MCP_ENABLE_ADMIN=true",
+          );
         }
         if (mutating && !config.enableWrite) {
-          throw new Error("Mutating raw API requests require ONYX_MCP_ENABLE_WRITE=true");
+          throw new Error(
+            "Mutating raw API requests require ONYX_MCP_ENABLE_WRITE=true",
+          );
         }
         if (destructive && !config.enableDestructive) {
-          throw new Error("Destructive raw API requests require ONYX_MCP_ENABLE_DESTRUCTIVE=true");
+          throw new Error(
+            "Destructive raw API requests require ONYX_MCP_ENABLE_DESTRUCTIVE=true",
+          );
         }
         if (destructive && confirm !== true) {
           throw new Error("Destructive raw API requests require confirm=true");
@@ -40,6 +50,6 @@ export function registerRawApiTool({ server, client, config }: ToolContext): voi
           ...(body === undefined ? {} : { body }),
         });
       }),
-    { openWorldHint: true },
+    { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
   );
 }

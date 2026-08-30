@@ -12,6 +12,7 @@ const config: Config = {
   enableRawApi: false,
   timeoutMs: 1_000,
   maxResponseBytes: 10_000,
+  maxConcurrency: 8,
 };
 
 describe("OnyxClient", () => {
@@ -37,9 +38,11 @@ describe("OnyxClient", () => {
   });
 
   it("does not expose authorization headers in API errors", async () => {
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify({ detail: "Forbidden" }), { status: 403 }),
-    );
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ detail: "Forbidden" }), { status: 403 }),
+      );
     const client = new OnyxClient(config, fetchMock);
 
     await expect(client.request("/me")).rejects.toThrow(
@@ -83,5 +86,63 @@ describe("OnyxClient", () => {
       "exceeded 10000 bytes",
     );
     expect(cancelled).toBe(true);
+  });
+
+  it("limits concurrent requests", async () => {
+    let releaseFirst!: () => void;
+    const firstResponse = new Promise<Response>((resolve) => {
+      releaseFirst = () => resolve(Response.json({ first: true }));
+    });
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockImplementationOnce(() => firstResponse)
+      .mockResolvedValueOnce(Response.json({ second: true }));
+    const client = new OnyxClient({ ...config, maxConcurrency: 1 }, fetchMock);
+
+    const first = client.request("/first");
+    const second = client.request("/second");
+    await Promise.resolve();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    releaseFirst();
+    await expect(first).resolves.toEqual({ first: true });
+    await expect(second).resolves.toEqual({ second: true });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects an already-cancelled request before network access", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = new OnyxClient(config, fetchMock);
+    const controller = new AbortController();
+    controller.abort();
+
+    const { runWithRequestSignal } = await import("./request-context.js");
+    await expect(
+      runWithRequestSignal(controller.signal, () => client.request("/search")),
+    ).rejects.toThrow();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("removes an already-cancelled request from the concurrency queue", async () => {
+    let releaseFirst!: () => void;
+    const firstResponse = new Promise<Response>((resolve) => {
+      releaseFirst = () => resolve(Response.json({ first: true }));
+    });
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockImplementationOnce(() => firstResponse);
+    const client = new OnyxClient({ ...config, maxConcurrency: 1 }, fetchMock);
+    const first = client.request("/first");
+    const controller = new AbortController();
+    const { runWithRequestSignal } = await import("./request-context.js");
+    const queued = runWithRequestSignal(controller.signal, () =>
+      client.request("/queued"),
+    );
+    controller.abort();
+
+    await expect(queued).rejects.toThrow();
+    releaseFirst();
+    await expect(first).resolves.toEqual({ first: true });
+    expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

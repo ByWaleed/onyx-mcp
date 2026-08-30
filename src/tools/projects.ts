@@ -3,9 +3,18 @@ import type { ToolContext } from "../register.js";
 import { addTool } from "../register.js";
 import { runTool } from "../tool-helpers.js";
 
-export function registerProjectTools({ server, client, config }: ToolContext): void {
-  addTool(server, "onyx_list_projects", "List Onyx projects.", {}, () =>
-    runTool(() => client.request("/user/projects")),
+export function registerProjectTools({
+  server,
+  client,
+  config,
+}: ToolContext): void {
+  addTool(
+    server,
+    "onyx_list_projects",
+    "List Onyx projects.",
+    {},
+    () => runTool(() => client.request("/user/projects")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -14,6 +23,7 @@ export function registerProjectTools({ server, client, config }: ToolContext): v
     { project_id: z.number().int().positive() },
     ({ project_id }) =>
       runTool(() => client.request(`/user/projects/${project_id}/details`)),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -22,6 +32,7 @@ export function registerProjectTools({ server, client, config }: ToolContext): v
     { project_id: z.number().int().positive() },
     ({ project_id }) =>
       runTool(() => client.request(`/user/projects/files/${project_id}`)),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -29,7 +40,10 @@ export function registerProjectTools({ server, client, config }: ToolContext): v
     "Get metadata and processing status for an Onyx user file.",
     { file_id: z.string().uuid() },
     ({ file_id }) =>
-      runTool(() => client.request(`/user/projects/file/${encodeURIComponent(file_id)}`)),
+      runTool(() =>
+        client.request(`/user/projects/file/${encodeURIComponent(file_id)}`),
+      ),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
 
   if (!config.enableWrite) return;
@@ -45,6 +59,7 @@ export function registerProjectTools({ server, client, config }: ToolContext): v
           query: { name },
         }),
       ),
+    { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   );
   addTool(
     server,
@@ -57,8 +72,17 @@ export function registerProjectTools({ server, client, config }: ToolContext): v
     },
     ({ project_id, ...body }) =>
       runTool(() =>
-        client.request(`/user/projects/${project_id}`, { method: "PATCH", body }),
+        client.request(`/user/projects/${project_id}`, {
+          method: "PATCH",
+          body,
+        }),
       ),
+    {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   );
   addTool(
     server,
@@ -75,6 +99,12 @@ export function registerProjectTools({ server, client, config }: ToolContext): v
           body: { instructions },
         }),
       ),
+    {
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   );
 
   if (!config.enableDestructive) return;
@@ -90,5 +120,11 @@ export function registerProjectTools({ server, client, config }: ToolContext): v
       runTool(() =>
         client.request(`/user/projects/${project_id}`, { method: "DELETE" }),
       ),
+    {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   );
 }

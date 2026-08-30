@@ -3,11 +3,20 @@ import type { ToolContext } from "../register.js";
 import { addTool } from "../register.js";
 import { runTool } from "../tool-helpers.js";
 
-export function registerAdminTools({ server, client, config }: ToolContext): void {
+export function registerAdminTools({
+  server,
+  client,
+  config,
+}: ToolContext): void {
   if (!config.enableAdmin) return;
 
-  addTool(server, "onyx_admin_list_connectors", "List configured Onyx connectors.", {}, () =>
-    runTool(() => client.request("/manage/admin/connector")),
+  addTool(
+    server,
+    "onyx_admin_list_connectors",
+    "List configured Onyx connectors.",
+    {},
+    () => runTool(() => client.request("/manage/admin/connector")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -15,18 +24,39 @@ export function registerAdminTools({ server, client, config }: ToolContext): voi
     "Get detailed indexing status for Onyx connectors.",
     {},
     () => runTool(() => client.request("/manage/admin/connector/status")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
-  addTool(server, "onyx_admin_list_credentials", "List credential metadata. Secret values are controlled and masked by Onyx.", {}, () =>
-    runTool(() => client.request("/manage/admin/credential")),
+  addTool(
+    server,
+    "onyx_admin_list_credentials",
+    "List credential metadata. Secret values are controlled and masked by Onyx.",
+    {},
+    () => runTool(() => client.request("/manage/admin/credential")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
-  addTool(server, "onyx_admin_list_users", "List users managed by this Onyx deployment.", {}, () =>
-    runTool(() => client.request("/manage/users")),
+  addTool(
+    server,
+    "onyx_admin_list_users",
+    "List users managed by this Onyx deployment.",
+    {},
+    () => runTool(() => client.request("/manage/users")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
-  addTool(server, "onyx_admin_list_agents", "List agents with administrative metadata.", {}, () =>
-    runTool(() => client.request("/admin/agents")),
+  addTool(
+    server,
+    "onyx_admin_list_agents",
+    "List agents with administrative metadata.",
+    {},
+    () => runTool(() => client.request("/admin/agents")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
-  addTool(server, "onyx_admin_list_ingested_documents", "List documents added through the direct ingestion API.", {}, () =>
-    runTool(() => client.request("/onyx-api/ingestion")),
+  addTool(
+    server,
+    "onyx_admin_list_ingested_documents",
+    "List documents added through the direct ingestion API.",
+    {},
+    () => runTool(() => client.request("/onyx-api/ingestion")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
 
   if (!config.enableWrite) return;
@@ -63,6 +93,7 @@ export function registerAdminTools({ server, client, config }: ToolContext): voi
           body: { document, cc_pair_id },
         }),
       ),
+    { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   );
   addTool(
     server,
@@ -80,6 +111,7 @@ export function registerAdminTools({ server, client, config }: ToolContext): voi
           body,
         }),
       ),
+    { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   );
 
   if (!config.enableDestructive) return;
@@ -90,9 +122,18 @@ export function registerAdminTools({ server, client, config }: ToolContext): voi
     { document_id: z.string().min(1), confirm: z.literal(true) },
     ({ document_id }) =>
       runTool(() =>
-        client.request(`/onyx-api/ingestion/${encodeURIComponent(document_id)}`, {
-          method: "DELETE",
-        }),
+        client.request(
+          `/onyx-api/ingestion/${encodeURIComponent(document_id)}`,
+          {
+            method: "DELETE",
+          },
+        ),
       ),
+    {
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
   );
 }

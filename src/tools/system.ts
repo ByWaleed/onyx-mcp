@@ -3,15 +3,34 @@ import type { ToolContext } from "../register.js";
 import { addTool } from "../register.js";
 import { runTool } from "../tool-helpers.js";
 
-export function registerSystemTools({ server, client, config }: ToolContext): void {
-  addTool(server, "onyx_health", "Check whether the Onyx API is healthy.", {}, () =>
-    runTool(() => client.request("/health")),
+export function registerSystemTools({
+  server,
+  client,
+  config,
+}: ToolContext): void {
+  addTool(
+    server,
+    "onyx_health",
+    "Check whether the Onyx API is healthy.",
+    {},
+    () => runTool(() => client.request("/health")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
-  addTool(server, "onyx_version", "Get the Onyx server version.", {}, () =>
-    runTool(() => client.request("/version")),
+  addTool(
+    server,
+    "onyx_version",
+    "Get the Onyx server version.",
+    {},
+    () => runTool(() => client.request("/version")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
-  addTool(server, "onyx_whoami", "Get the authenticated Onyx user.", {}, () =>
-    runTool(() => client.request("/me")),
+  addTool(
+    server,
+    "onyx_whoami",
+    "Get the authenticated Onyx user.",
+    {},
+    () => runTool(() => client.request("/me")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -19,6 +38,7 @@ export function registerSystemTools({ server, client, config }: ToolContext): vo
     "Get permissions granted to the authenticated Onyx user.",
     {},
     () => runTool(() => client.request("/me/permissions")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -26,13 +46,16 @@ export function registerSystemTools({ server, client, config }: ToolContext): vo
     "Show this MCP server's enabled safety profiles and default assistant.",
     {},
     () =>
-      runTool(async () => ({
-        write: config.enableWrite,
-        admin: config.enableAdmin,
-        destructive: config.enableDestructive,
-        rawApi: config.enableRawApi,
-        defaultPersonaId: config.defaultPersonaId,
-      })),
+      runTool(() =>
+        Promise.resolve({
+          write: config.enableWrite,
+          admin: config.enableAdmin,
+          destructive: config.enableDestructive,
+          rawApi: config.enableRawApi,
+          defaultPersonaId: config.defaultPersonaId,
+        }),
+      ),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -46,6 +69,7 @@ export function registerSystemTools({ server, client, config }: ToolContext): vo
       include_default: z.boolean().optional(),
     },
     (args) => runTool(() => client.request("/agents", { query: args })),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -53,9 +77,15 @@ export function registerSystemTools({ server, client, config }: ToolContext): vo
     "Get one Onyx agent by ID.",
     { persona_id: z.number().int().nonnegative() },
     ({ persona_id }) => runTool(() => client.request(`/persona/${persona_id}`)),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
-  addTool(server, "onyx_list_tools", "List tools configured in Onyx.", {}, () =>
-    runTool(() => client.request("/tool")),
+  addTool(
+    server,
+    "onyx_list_tools",
+    "List tools configured in Onyx.",
+    {},
+    () => runTool(() => client.request("/tool")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -68,6 +98,7 @@ export function registerSystemTools({ server, client, config }: ToolContext): vo
           query: { get_editable: editable_only },
         }),
       ),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -75,6 +106,7 @@ export function registerSystemTools({ server, client, config }: ToolContext): vo
     "List source types indexed by Onyx.",
     {},
     () => runTool(() => client.request("/manage/indexed-sources")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -82,5 +114,6 @@ export function registerSystemTools({ server, client, config }: ToolContext): vo
     "Get status summaries for Onyx connectors.",
     {},
     () => runTool(() => client.request("/manage/connector-status")),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
 }

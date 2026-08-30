@@ -1,0 +1,22 @@
+name: Feature request
+description: Propose an improvement or additional Onyx API integration
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: input
+    id: endpoint
+    attributes:
+      label: Onyx endpoint or documentation
+      description: Include evidence for any API contract change.

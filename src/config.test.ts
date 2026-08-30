@@ -13,6 +13,7 @@ describe("loadConfig", () => {
     expect(config.enableWrite).toBe(false);
     expect(config.enableAdmin).toBe(false);
     expect(config.enableDestructive).toBe(false);
+    expect(config.maxConcurrency).toBe(8);
   });
 
   it("parses explicit capability opt-ins", () => {

@@ -1,5 +1,6 @@
 name: Bug report
 description: Report a reproducible problem with Onyx MCP
+labels: [bug]
 body:
   - type: input
     id: version
@@ -13,6 +14,18 @@ body:
       label: Onyx version
     validations:
       required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, Node.js version, and MCP client/version.
+    validations:
+      required: true
+  - type: input
+    id: capabilities
+    attributes:
+      label: Enabled capability profiles
+      description: For example, read-only, write, admin, destructive, or raw API.
   - type: textarea
     id: problem
     attributes:
@@ -21,8 +34,21 @@ body:
     validations:
       required: true
   - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
     id: reproduce
     attributes:
       label: Steps to reproduce
     validations:
       required: true
+  - type: checkboxes
+    id: redacted
+    attributes:
+      label: Sensitive data
+      options:
+        - label: I removed tokens, credentials, and private document content.
+          required: true

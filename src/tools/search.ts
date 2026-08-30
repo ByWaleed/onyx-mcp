@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ToolContext } from "../register.js";
 import { addTool } from "../register.js";
-import { filtersSchema } from "../schemas.js";
+import { filtersSchema, httpUrlSchema } from "../schemas.js";
 import { runTool } from "../tool-helpers.js";
 
 export function registerSearchTools({ server, client }: ToolContext): void {
@@ -10,24 +10,37 @@ export function registerSearchTools({ server, client }: ToolContext): void {
     "onyx_search",
     "Search indexed Onyx knowledge with access controls enforced by Onyx.",
     {
-      query: z.string().min(1),
+      query: z
+        .string()
+        .min(1)
+        .max(2048)
+        .describe("Search query, up to 2,048 characters."),
       filters: filtersSchema.optional(),
       persona_id: z.number().int().nonnegative().optional(),
-      provider: z.string().optional(),
-      model: z.string().optional(),
+      provider: z
+        .string()
+        .optional()
+        .describe("Model provider; model is also required."),
+      model: z
+        .string()
+        .optional()
+        .describe("Model name; provider is also required."),
       skip_query_expansion: z.boolean().optional(),
     },
-    ({ query, filters, ...options }) =>
+    (args) =>
       runTool(() =>
-        client.request("/search", {
-          method: "POST",
-          body: {
-            query,
-            ...filters,
-            ...options,
-          },
-        }),
+        (() => {
+          if ((args.provider === undefined) !== (args.model === undefined)) {
+            throw new Error("provider and model must be supplied together");
+          }
+          const { query, filters, ...options } = args;
+          return client.request("/search", {
+            method: "POST",
+            body: { query, ...filters, ...options },
+          });
+        })(),
       ),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -38,7 +51,9 @@ export function registerSearchTools({ server, client }: ToolContext): void {
       sources: z.array(z.string()).optional(),
       limit: z.number().int().positive().max(1000).optional(),
     },
-    (args) => runTool(() => client.request("/query/valid-tags", { query: args })),
+    (args) =>
+      runTool(() => client.request("/query/valid-tags", { query: args })),
+    { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
   addTool(
     server,
@@ -61,7 +76,7 @@ export function registerSearchTools({ server, client }: ToolContext): void {
     server,
     "onyx_open_urls",
     "Fetch and extract web pages through Onyx.",
-    { urls: z.array(z.string().url()).min(1).max(20) },
+    { urls: z.array(httpUrlSchema).min(1).max(20) },
     ({ urls }) =>
       runTool(() =>
         client.request("/web-search/open-urls", {
