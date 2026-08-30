@@ -36,6 +36,9 @@ export class OnyxClient {
       this.activeRequests += 1;
       return;
     }
+    if (this.waiters.length >= (this.config.maxQueue ?? 100)) {
+      throw new Error("Onyx request queue is full");
+    }
     await new Promise<void>((resolve, reject) => {
       const resume = () => {
         signal?.removeEventListener("abort", abort);
@@ -77,11 +80,34 @@ export class OnyxClient {
     if (options.query) addQuery(url, options.query);
 
     const callerSignal = getRequestSignal();
+    const deadlineController = new AbortController();
+    const deadline = setTimeout(
+      () => deadlineController.abort(),
+      this.config.timeoutMs,
+    );
+    const combinedSignal = callerSignal
+      ? AbortSignal.any([callerSignal, deadlineController.signal])
+      : deadlineController.signal;
     callerSignal?.throwIfAborted();
-    await this.acquire(callerSignal);
+    try {
+      await this.acquire(combinedSignal);
+    } catch (error) {
+      clearTimeout(deadline);
+      if (callerSignal?.aborted) {
+        throw new Error("Onyx request was cancelled", { cause: error });
+      }
+      if (deadlineController.signal.aborted) {
+        throw new Error(
+          `Onyx request timed out after ${this.config.timeoutMs}ms`,
+          {
+            cause: error,
+          },
+        );
+      }
+      throw error;
+    }
     const controller = new AbortController();
-    const abortFromCaller = () => controller.abort(callerSignal?.reason);
-    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const abortFromCaller = () => controller.abort(combinedSignal.reason);
     const headers: Record<string, string> = {
       Accept: "application/json",
       Authorization: `Bearer ${this.config.apiToken}`,
@@ -93,9 +119,8 @@ export class OnyxClient {
     }
 
     try {
-      callerSignal?.throwIfAborted();
-      callerSignal?.addEventListener("abort", abortFromCaller, { once: true });
-      timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
+      combinedSignal.throwIfAborted();
+      combinedSignal.addEventListener("abort", abortFromCaller, { once: true });
       const requestInit: RequestInit = {
         method: options.method ?? "GET",
         headers,
@@ -177,8 +202,8 @@ export class OnyxClient {
       }
       throw error;
     } finally {
-      if (timeout !== undefined) clearTimeout(timeout);
-      callerSignal?.removeEventListener("abort", abortFromCaller);
+      clearTimeout(deadline);
+      combinedSignal.removeEventListener("abort", abortFromCaller);
       this.release();
     }
   }

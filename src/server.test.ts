@@ -49,6 +49,8 @@ describe("MCP server", () => {
     expect(names).not.toContain("onyx_chat");
     expect(names).not.toContain("onyx_api_request");
     expect(names).not.toContain("onyx_delete_chat");
+    expect(names).not.toContain("onyx_open_urls");
+    expect(names).not.toContain("onyx_web_search");
     expect(
       tools.find((tool) => tool.name === "onyx_health")?.annotations,
     ).toMatchObject({
@@ -59,7 +61,7 @@ describe("MCP server", () => {
     expect(client.getServerVersion()).toMatchObject({
       name: "onyx-mcp",
       title: "Onyx MCP",
-      version: "0.2.0",
+      version: "0.2.1",
     });
   });
 
@@ -183,6 +185,43 @@ describe("MCP server", () => {
     });
     expect(deleteResult.isError).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("requires destructive confirmation for every raw mutation", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const { client } = await connect(
+      {
+        ...baseConfig,
+        enableWrite: true,
+        enableAdmin: true,
+        enableDestructive: false,
+        enableRawApi: true,
+      },
+      fetchMock,
+    );
+
+    for (const method of ["POST", "PUT", "PATCH"]) {
+      const result = await client.callTool({
+        name: "onyx_api_request",
+        arguments: { method, path: "/some/deployment-specific-route" },
+      });
+      expect(result.isError).toBe(true);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("registers web tools only with an explicit allowlist opt-in", async () => {
+    const { client } = await connect(
+      {
+        ...baseConfig,
+        enableWebFetch: true,
+        webFetchAllowlist: ["example.com"],
+      },
+      vi.fn<typeof fetch>(),
+    );
+    const names = (await client.listTools()).tools.map((tool) => tool.name);
+    expect(names).toContain("onyx_web_search");
+    expect(names).toContain("onyx_open_urls");
   });
 
   it.each([

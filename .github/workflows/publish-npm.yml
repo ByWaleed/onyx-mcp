@@ -15,6 +15,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: npm
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
     permissions:
       contents: read
       id-token: write
@@ -25,9 +27,10 @@ jobs:
           fetch-depth: 0
       - name: Verify selected version
         run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           git fetch origin main --tags
-          test "$(git describe --tags --exact-match HEAD)" = "${{ inputs.tag }}"
-          test "v$(node -p 'require("./package.json").version')" = "${{ inputs.tag }}"
+          test "$(git describe --tags --exact-match HEAD)" = "$RELEASE_TAG"
+          test "v$(node -p 'require("./package.json").version')" = "$RELEASE_TAG"
           git merge-base --is-ancestor HEAD origin/main
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:

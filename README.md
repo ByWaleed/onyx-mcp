@@ -23,8 +23,10 @@ This project exposes Onyx search, chat, agents, projects, documents, connectors,
 ## Install
 
 ```bash
-npx -y onyx-mcp
+npx -y onyx-mcp@0.2.1
 ```
+
+The pinned command is recommended for reproducible execution. Use `npx -y onyx-mcp@latest` only if you intentionally want automatic upgrades.
 
 Versioned tarballs are attached to [GitHub Releases](https://github.com/ByWaleed/onyx-mcp/releases). The previous scoped package, `@bywaleed/onyx-mcp`, is deprecated in favor of `onyx-mcp`.
 
@@ -39,16 +41,19 @@ Required:
 
 Optional:
 
-| Variable                      | Default   | Description                                                        |
-| ----------------------------- | --------- | ------------------------------------------------------------------ |
-| `ONYX_DEFAULT_PERSONA_ID`     | `0`       | Default agent used for new chats                                   |
-| `ONYX_MCP_ENABLE_WRITE`       | `false`   | Registers tools that create or modify data                         |
-| `ONYX_MCP_ENABLE_ADMIN`       | `false`   | Registers administrative tools                                     |
-| `ONYX_MCP_ENABLE_DESTRUCTIVE` | `false`   | Registers destructive tools; write must also be enabled            |
-| `ONYX_MCP_ENABLE_RAW_API`     | `false`   | Registers the advanced raw API tool; admin access is also required |
-| `ONYX_MCP_TIMEOUT_MS`         | `30000`   | Request timeout                                                    |
-| `ONYX_MCP_MAX_RESPONSE_BYTES` | `1000000` | Maximum accepted response body                                     |
-| `ONYX_MCP_MAX_CONCURRENCY`    | `8`       | Maximum concurrent requests to Onyx                                |
+| Variable                       | Default   | Description                                                        |
+| ------------------------------ | --------- | ------------------------------------------------------------------ |
+| `ONYX_DEFAULT_PERSONA_ID`      | `0`       | Default agent used for new chats                                   |
+| `ONYX_MCP_ENABLE_WRITE`        | `false`   | Registers tools that create or modify data                         |
+| `ONYX_MCP_ENABLE_ADMIN`        | `false`   | Registers administrative tools                                     |
+| `ONYX_MCP_ENABLE_DESTRUCTIVE`  | `false`   | Registers destructive tools; write must also be enabled            |
+| `ONYX_MCP_ENABLE_RAW_API`      | `false`   | Registers the advanced raw API tool; admin access is also required |
+| `ONYX_MCP_ENABLE_WEB_FETCH`    | `false`   | Registers web search and URL-fetching tools                        |
+| `ONYX_MCP_WEB_FETCH_ALLOWLIST` | empty     | Comma-separated hostnames allowed for HTTPS URL fetching           |
+| `ONYX_MCP_TIMEOUT_MS`          | `30000`   | Request timeout                                                    |
+| `ONYX_MCP_MAX_RESPONSE_BYTES`  | `1000000` | Maximum accepted response body                                     |
+| `ONYX_MCP_MAX_CONCURRENCY`     | `8`       | Maximum concurrent requests to Onyx                                |
+| `ONYX_MCP_MAX_QUEUE`           | `100`     | Maximum requests waiting for a concurrency slot                    |
 
 Onyx still enforces the permissions attached to the supplied token. Enabling a profile cannot grant additional Onyx privileges.
 
@@ -59,7 +64,7 @@ Onyx still enforces the permissions attached to the supplied token. Enabling a p
   "mcp": {
     "onyx": {
       "type": "local",
-      "command": ["npx", "-y", "onyx-mcp"],
+      "command": ["npx", "-y", "onyx-mcp@0.2.1"],
       "environment": {
         "ONYX_API_URL": "https://onyx.example.com/api",
         "ONYX_API_TOKEN": "{env:ONYX_API_TOKEN}"
@@ -77,7 +82,7 @@ Onyx still enforces the permissions attached to the supplied token. Enabling a p
   "mcpServers": {
     "onyx": {
       "command": "npx",
-      "args": ["-y", "onyx-mcp"],
+      "args": ["-y", "onyx-mcp@0.2.1"],
       "env": {
         "ONYX_API_URL": "https://onyx.example.com/api",
         "ONYX_API_TOKEN": "your-token"
@@ -97,11 +102,11 @@ The admin profile adds connector, credential, user, agent, and direct-ingestion 
 
 The destructive profile adds individually confirmed deletion tools. Bulk deletion is intentionally not exposed as a first-class tool.
 
-The raw API profile adds `onyx_api_request`. It covers APIs specific to an Onyx edition or version. Every raw request requires the admin profile. Mutations also require write access, and deletions require destructive access plus confirmation.
+The raw API profile adds `onyx_api_request`. It covers APIs specific to an Onyx edition or version. Every raw request requires the admin profile. Every non-GET request also requires write and destructive access plus confirmation because arbitrary endpoint semantics cannot be inferred safely.
 
 ## Tools
 
-The default profile provides health, version, identity, permission, search, agent, chat-history, project, file, document-set, tool, source, and connector-status tools. Write mode adds chat, feedback, and project mutations. Admin mode adds connector, credential, user, agent, and ingestion tools.
+The default profile provides health, version, identity, permission, indexed search, agent, chat-history, project, file, document-set, tool, source, and connector-status tools. Write mode adds chat, feedback, and project mutations. Admin mode adds connector, credential, user, agent, and ingestion tools. Web search and URL fetching require a separate web-fetch opt-in. URL fetching accepts only HTTPS destinations matching the configured hostname allowlist; Onyx must also validate redirects and resolved addresses to prevent DNS rebinding.
 
 Run `onyx_capabilities` to inspect the active profile. MCP clients can also call `tools/list` for complete machine-readable schemas and safety annotations.
 

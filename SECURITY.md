@@ -27,4 +27,6 @@ You should receive an acknowledgement within seven days. Resolution time depends
 
 This server has local capability gates, but Onyx is the source of truth for authorization. The server cannot grant access that the configured Onyx token does not have.
 
-Destructive first-class tools require both `ONYX_MCP_ENABLE_DESTRUCTIVE=true` and an explicit `confirm: true` argument. Raw DELETE requests have the same requirement.
+Destructive first-class tools require both `ONYX_MCP_ENABLE_DESTRUCTIVE=true` and an explicit `confirm: true` argument. All raw non-GET requests have the same requirement.
+
+Web search and URL fetching are disabled by default. URL fetching requires an HTTPS hostname allowlist. The Onyx deployment should independently reject private, loopback, link-local, and rebinding destinations after DNS resolution and redirects.

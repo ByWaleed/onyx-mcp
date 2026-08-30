@@ -14,6 +14,9 @@ describe("loadConfig", () => {
     expect(config.enableAdmin).toBe(false);
     expect(config.enableDestructive).toBe(false);
     expect(config.maxConcurrency).toBe(8);
+    expect(config.maxQueue).toBe(100);
+    expect(config.enableWebFetch).toBe(false);
+    expect(config.webFetchAllowlist).toEqual([]);
   });
 
   it("parses explicit capability opt-ins", () => {

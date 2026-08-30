@@ -23,6 +23,8 @@ const envSchema = z.object({
   ONYX_MCP_ENABLE_ADMIN: booleanValue,
   ONYX_MCP_ENABLE_DESTRUCTIVE: booleanValue,
   ONYX_MCP_ENABLE_RAW_API: booleanValue,
+  ONYX_MCP_ENABLE_WEB_FETCH: booleanValue,
+  ONYX_MCP_WEB_FETCH_ALLOWLIST: z.string().optional().default(""),
   ONYX_MCP_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
   ONYX_MCP_MAX_RESPONSE_BYTES: z.coerce
     .number()
@@ -35,6 +37,12 @@ const envSchema = z.object({
     .positive()
     .max(100)
     .default(8),
+  ONYX_MCP_MAX_QUEUE: z.coerce
+    .number()
+    .int()
+    .nonnegative()
+    .max(10_000)
+    .default(100),
 });
 
 export interface Config {
@@ -45,9 +53,12 @@ export interface Config {
   enableAdmin: boolean;
   enableDestructive: boolean;
   enableRawApi: boolean;
+  enableWebFetch?: boolean;
+  webFetchAllowlist?: string[];
   timeoutMs: number;
   maxResponseBytes: number;
   maxConcurrency?: number;
+  maxQueue?: number;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -61,8 +72,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     enableAdmin: parsed.ONYX_MCP_ENABLE_ADMIN,
     enableDestructive: parsed.ONYX_MCP_ENABLE_DESTRUCTIVE,
     enableRawApi: parsed.ONYX_MCP_ENABLE_RAW_API,
+    enableWebFetch: parsed.ONYX_MCP_ENABLE_WEB_FETCH,
+    webFetchAllowlist: parsed.ONYX_MCP_WEB_FETCH_ALLOWLIST.split(",")
+      .map((host) => host.trim().toLowerCase())
+      .filter(Boolean),
     timeoutMs: parsed.ONYX_MCP_TIMEOUT_MS,
     maxResponseBytes: parsed.ONYX_MCP_MAX_RESPONSE_BYTES,
     maxConcurrency: parsed.ONYX_MCP_MAX_CONCURRENCY,
+    maxQueue: parsed.ONYX_MCP_MAX_QUEUE,
   };
 }

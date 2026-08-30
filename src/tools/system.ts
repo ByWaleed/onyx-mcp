@@ -52,6 +52,7 @@ export function registerSystemTools({
           admin: config.enableAdmin,
           destructive: config.enableDestructive,
           rawApi: config.enableRawApi,
+          webFetch: config.enableWebFetch ?? false,
           defaultPersonaId: config.defaultPersonaId,
         }),
       ),
