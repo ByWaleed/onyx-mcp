@@ -59,7 +59,7 @@ describe("MCP server", () => {
     expect(client.getServerVersion()).toMatchObject({
       name: "onyx-mcp",
       title: "Onyx MCP",
-      version: "0.1.0",
+      version: "0.1.1",
     });
   });
 
