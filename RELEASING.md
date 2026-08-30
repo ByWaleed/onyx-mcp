@@ -17,9 +17,10 @@ Version tags create draft GitHub Releases through `.github/workflows/release.yml
 2. Run `npm run verify`, `npm run test:coverage`, and `npm pack`.
 3. Merge through the protected `main` branch.
 4. Create and push a signed `vX.Y.Z` tag matching `package.json`.
-5. Verify the GitHub Release workflow creates a draft release with the tarball, checksum, SBOM, build attestation, and GitHub npm package.
+5. Verify the GitHub Release workflow creates a draft release with the tarball, checksum, SBOM, and build attestation.
 6. Inspect the assets and publish the draft GitHub Release.
-7. Run the `Publish npm` workflow from protected `main` for the tag after trusted publishing is configured.
-8. Run the `Publish MCP Registry` workflow from protected `main` after npm shows the exact version.
+7. Run the `Publish GitHub Package` workflow from protected `main` for the tag.
+8. Run the `Publish npm` workflow from protected `main` for the tag after trusted publishing is configured.
+9. Run the `Publish MCP Registry` workflow from protected `main` after npm shows the exact version.
 
 GitHub releases can be created before npm setup. Do not run the npm or MCP Registry workflows until their environments and external registry settings are configured.
