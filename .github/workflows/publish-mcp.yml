@@ -1,0 +1,50 @@
+name: Publish MCP Registry
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing npm-published release tag, for example v0.1.0
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: mcp-registry
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+      - name: Verify npm package exists
+        run: |
+          git fetch origin main --tags
+          test "$(git describe --tags --exact-match HEAD)" = "${{ inputs.tag }}"
+          test "v$(node -p 'require("./package.json").version')" = "${{ inputs.tag }}"
+          git merge-base --is-ancestor HEAD origin/main
+          npm view "$(node -p 'require("./package.json").name')@$(node -p 'require("./package.json").version')" version
+      - name: Install MCP publisher
+        run: |
+          curl --fail --location --silent --show-error --output mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz"
+          echo "a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  mcp-publisher.tar.gz" | sha256sum --check
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+      - run: ./mcp-publisher login github-oidc
+      - name: Publish if absent
+        run: |
+          NAME=$(node -p 'require("./server.json").name')
+          VERSION=$(node -p 'require("./server.json").version')
+          curl --fail --silent --show-error --get \
+            --data-urlencode "search=$NAME" \
+            https://registry.modelcontextprotocol.io/v0.1/servers \
+            --output registry-response.json
+          if jq -e --arg name "$NAME" --arg version "$VERSION" '.servers[]? | select(.server.name == $name and .server.version == $version)' registry-response.json >/dev/null; then
+            echo "$NAME@$VERSION is already published"
+          else
+            ./mcp-publisher publish
+          fi

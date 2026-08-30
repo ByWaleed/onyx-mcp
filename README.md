@@ -3,6 +3,8 @@
 [![CI](https://github.com/ByWaleed/onyx-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ByWaleed/onyx-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+MCP Registry name: `io.github.bywaleed/onyx-mcp`
+
 A comprehensive, secure Model Context Protocol server for [Onyx](https://www.onyx.app/), formerly Danswer.
 
 This project exposes Onyx search, chat, agents, projects, documents, connectors, ingestion, and deployment-specific APIs to MCP clients. It is an independent community project and is not an official Onyx package.
@@ -25,6 +27,8 @@ npx -y @bywaleed/onyx-mcp
 ```
 
 Until the first npm release, clone the repository and run `npm install && npm run build`.
+
+Versioned tarballs will be attached to [GitHub Releases](https://github.com/ByWaleed/onyx-mcp/releases) and published to GitHub Packages as `@bywaleed/onyx-mcp`.
 
 ## Configuration
 
@@ -140,6 +144,7 @@ The server uses non-streaming Onyx chat responses for a stable MCP result. Onyx 
 - Vulnerabilities: [private security advisory](https://github.com/ByWaleed/onyx-mcp/security/advisories/new)
 - Release history: [CHANGELOG.md](CHANGELOG.md)
 - Maintainer release process: [RELEASING.md](RELEASING.md)
+- MCP Registry metadata: [server.json](server.json)
 
 ## License
 
