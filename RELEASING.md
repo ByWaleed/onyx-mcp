@@ -4,7 +4,7 @@ Version tags create draft GitHub Releases through `.github/workflows/release.yml
 
 ## First Release Setup
 
-1. Confirm ownership of the `@bywaleed` npm scope.
+1. Confirm ownership of the `onyx-mcp` npm package.
 2. Bootstrap the package on npm if trusted publishing cannot be configured before the package exists.
 3. Configure npm trusted publishing for repository `ByWaleed/onyx-mcp`, workflow `publish-npm.yml`, and environment `npm`.
 4. Create the `npm` GitHub environment and restrict workflow dispatches to protected `main`.
@@ -19,8 +19,7 @@ Version tags create draft GitHub Releases through `.github/workflows/release.yml
 4. Create and push a signed `vX.Y.Z` tag matching `package.json`.
 5. Verify the GitHub Release workflow creates a draft release with the tarball, checksum, SBOM, and build attestation.
 6. Inspect the assets and publish the draft GitHub Release.
-7. Run the `Publish GitHub Package` workflow from protected `main` for the tag.
-8. Run the `Publish npm` workflow from protected `main` for the tag after trusted publishing is configured.
-9. Run the `Publish MCP Registry` workflow from protected `main` after npm shows the exact version.
+7. Run the `Publish npm` workflow from protected `main` for the tag after trusted publishing is configured.
+8. Run the `Publish MCP Registry` workflow from protected `main` after npm shows the exact version.
 
 GitHub releases can be created before npm setup. Do not run the npm or MCP Registry workflows until their environments and external registry settings are configured.

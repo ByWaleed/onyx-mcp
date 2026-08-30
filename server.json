@@ -3,7 +3,7 @@
   "name": "io.github.ByWaleed/onyx-mcp",
   "title": "Onyx MCP",
   "description": "Secure MCP access to Onyx search, chat, projects, and administration.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "websiteUrl": "https://github.com/ByWaleed/onyx-mcp",
   "repository": {
     "url": "https://github.com/ByWaleed/onyx-mcp",
@@ -14,8 +14,8 @@
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "@bywaleed/onyx-mcp",
-      "version": "0.1.1",
+      "identifier": "onyx-mcp",
+      "version": "0.2.0",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"
