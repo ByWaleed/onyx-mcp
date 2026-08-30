@@ -1,0 +1,64 @@
+{
+  "name": "@bywaleed/onyx-mcp",
+  "version": "0.1.0",
+  "description": "A comprehensive, secure Model Context Protocol server for Onyx.",
+  "type": "module",
+  "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    }
+  },
+  "bin": {
+    "onyx-mcp": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/cli.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepack": "npm run check && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "onyx",
+    "danswer",
+    "mcp",
+    "model-context-protocol",
+    "enterprise-search",
+    "rag"
+  ],
+  "author": "Waleed Islam",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ByWaleed/onyx-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ByWaleed/onyx-mcp/issues"
+  },
+  "homepage": "https://github.com/ByWaleed/onyx-mcp#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
+  }
+}
