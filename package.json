@@ -1,7 +1,7 @@
 {
   "name": "onyx-mcp",
   "mcpName": "io.github.ByWaleed/onyx-mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A comprehensive, secure Model Context Protocol server for Onyx.",
   "type": "module",
   "main": "dist/server.js",

@@ -145,4 +145,25 @@ describe("OnyxClient", () => {
     await expect(first).resolves.toEqual({ first: true });
     expect(fetchMock).toHaveBeenCalledOnce();
   });
+
+  it("rejects requests when the concurrency queue is full", async () => {
+    let releaseFirst!: () => void;
+    const firstResponse = new Promise<Response>((resolve) => {
+      releaseFirst = () => resolve(Response.json({ first: true }));
+    });
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockImplementationOnce(() => firstResponse);
+    const client = new OnyxClient(
+      { ...config, maxConcurrency: 1, maxQueue: 0 },
+      fetchMock,
+    );
+    const first = client.request("/first");
+
+    await expect(client.request("/second")).rejects.toThrow(
+      "Onyx request queue is full",
+    );
+    releaseFirst();
+    await expect(first).resolves.toEqual({ first: true });
+  });
 });

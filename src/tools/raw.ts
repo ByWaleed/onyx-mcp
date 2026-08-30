@@ -25,7 +25,7 @@ export function registerRawApiTool({
     ({ method, path, query, body, confirm }) =>
       runTool(async () => {
         const mutating = method !== "GET";
-        const destructive = method === "DELETE";
+        const destructive = method !== "GET";
         if (!config.enableAdmin) {
           throw new Error(
             "Raw API requests require ONYX_MCP_ENABLE_ADMIN=true",

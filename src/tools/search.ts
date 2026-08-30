@@ -4,7 +4,20 @@ import { addTool } from "../register.js";
 import { filtersSchema, httpUrlSchema } from "../schemas.js";
 import { runTool } from "../tool-helpers.js";
 
-export function registerSearchTools({ server, client }: ToolContext): void {
+function isAllowedWebUrl(value: string, allowlist: string[]): boolean {
+  const url = new URL(value);
+  if (url.protocol !== "https:" || url.username || url.password) return false;
+  const hostname = url.hostname.toLowerCase();
+  return allowlist.some(
+    (allowed) => hostname === allowed || hostname.endsWith(`.${allowed}`),
+  );
+}
+
+export function registerSearchTools({
+  server,
+  client,
+  config,
+}: ToolContext): void {
   addTool(
     server,
     "onyx_search",
@@ -42,6 +55,9 @@ export function registerSearchTools({ server, client }: ToolContext): void {
       ),
     { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   );
+
+  if (!config.enableWebFetch) return;
+
   addTool(
     server,
     "onyx_search_tags",
@@ -76,7 +92,19 @@ export function registerSearchTools({ server, client }: ToolContext): void {
     server,
     "onyx_open_urls",
     "Fetch and extract web pages through Onyx.",
-    { urls: z.array(httpUrlSchema).min(1).max(20) },
+    {
+      urls: z
+        .array(httpUrlSchema)
+        .min(1)
+        .max(20)
+        .refine(
+          (urls) =>
+            urls.every((url) =>
+              isAllowedWebUrl(url, config.webFetchAllowlist ?? []),
+            ),
+          "Every URL must use HTTPS and match ONYX_MCP_WEB_FETCH_ALLOWLIST",
+        ),
+    },
     ({ urls }) =>
       runTool(() =>
         client.request("/web-search/open-urls", {

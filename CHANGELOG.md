@@ -4,6 +4,14 @@ This project follows [Semantic Versioning](https://semver.org/). Before version 
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-30
+
+### Security
+
+- Disabled web search and URL fetching by default and added an HTTPS hostname allowlist for URL fetching.
+- Required destructive mode and explicit confirmation for every raw non-GET request.
+- Bounded the request queue and applied request timeouts while waiting for a concurrency slot.
+
 ## [0.2.0] - 2026-08-30
 
 ### Changed
@@ -24,7 +32,8 @@ This project follows [Semantic Versioning](https://semver.org/). Before version 
 - Cancellation propagation, request concurrency limits, complete MCP safety annotations, linting, formatting, coverage, and package smoke tests.
 - GitHub Release artifacts, checksums, SPDX SBOM generation, build attestations, and workflows for GitHub Packages, npm, and the MCP Registry.
 
-[Unreleased]: https://github.com/ByWaleed/onyx-mcp/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ByWaleed/onyx-mcp/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/ByWaleed/onyx-mcp/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ByWaleed/onyx-mcp/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/ByWaleed/onyx-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ByWaleed/onyx-mcp/releases/tag/v0.1.0
