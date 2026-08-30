@@ -23,12 +23,10 @@ This project exposes Onyx search, chat, agents, projects, documents, connectors,
 ## Install
 
 ```bash
-npx -y @bywaleed/onyx-mcp
+npx -y onyx-mcp
 ```
 
-Until the first npm release, clone the repository and run `npm install && npm run build`.
-
-Versioned tarballs will be attached to [GitHub Releases](https://github.com/ByWaleed/onyx-mcp/releases) and published to GitHub Packages as `@bywaleed/onyx-mcp`.
+Versioned tarballs are attached to [GitHub Releases](https://github.com/ByWaleed/onyx-mcp/releases). The previous scoped package, `@bywaleed/onyx-mcp`, is deprecated in favor of `onyx-mcp`.
 
 ## Configuration
 
@@ -61,7 +59,7 @@ Onyx still enforces the permissions attached to the supplied token. Enabling a p
   "mcp": {
     "onyx": {
       "type": "local",
-      "command": ["npx", "-y", "@bywaleed/onyx-mcp"],
+      "command": ["npx", "-y", "onyx-mcp"],
       "environment": {
         "ONYX_API_URL": "https://onyx.example.com/api",
         "ONYX_API_TOKEN": "{env:ONYX_API_TOKEN}"
@@ -79,7 +77,7 @@ Onyx still enforces the permissions attached to the supplied token. Enabling a p
   "mcpServers": {
     "onyx": {
       "command": "npx",
-      "args": ["-y", "@bywaleed/onyx-mcp"],
+      "args": ["-y", "onyx-mcp"],
       "env": {
         "ONYX_API_URL": "https://onyx.example.com/api",
         "ONYX_API_TOKEN": "your-token"

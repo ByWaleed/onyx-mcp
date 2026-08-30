@@ -4,6 +4,13 @@ This project follows [Semantic Versioning](https://semver.org/). Before version 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-30
+
+### Changed
+
+- Renamed the canonical npm package from `@bywaleed/onyx-mcp` to `onyx-mcp` for simpler installation.
+- Removed GitHub Packages publication because GitHub's npm registry requires scoped package names.
+
 ## [0.1.1] - 2026-08-30
 
 ### Fixed
@@ -17,6 +24,7 @@ This project follows [Semantic Versioning](https://semver.org/). Before version 
 - Cancellation propagation, request concurrency limits, complete MCP safety annotations, linting, formatting, coverage, and package smoke tests.
 - GitHub Release artifacts, checksums, SPDX SBOM generation, build attestations, and workflows for GitHub Packages, npm, and the MCP Registry.
 
-[Unreleased]: https://github.com/ByWaleed/onyx-mcp/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/ByWaleed/onyx-mcp/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ByWaleed/onyx-mcp/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/ByWaleed/onyx-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ByWaleed/onyx-mcp/releases/tag/v0.1.0
