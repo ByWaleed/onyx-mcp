@@ -18,7 +18,7 @@ export function registerRawApiTool({
     {
       method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
       path: rawPathSchema,
-      query: z.record(z.unknown()).optional(),
+      query: z.record(z.string(), z.unknown()).optional(),
       body: z.unknown().optional(),
       confirm: z.boolean().optional(),
     },
