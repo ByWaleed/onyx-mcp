@@ -79,7 +79,10 @@ export function registerAdminTools({
           )
           .min(1),
         source: z.string().optional(),
-        metadata: z.record(z.union([z.string(), z.array(z.string())])),
+        metadata: z.record(
+          z.string(),
+          z.union([z.string(), z.array(z.string())]),
+        ),
         title: z.string().nullable().optional(),
         doc_updated_at: z.string().datetime().optional(),
         doc_created_at: z.string().datetime().optional(),

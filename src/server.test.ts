@@ -166,6 +166,88 @@ describe("MCP server", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("accepts string-keyed raw API query parameters", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ results: [] }), { status: 200 }),
+      );
+    const { client } = await connect(
+      { ...baseConfig, enableAdmin: true, enableRawApi: true },
+      fetchMock,
+    );
+
+    const result = await client.callTool({
+      name: "onyx_api_request",
+      arguments: {
+        method: "GET",
+        path: "/some/deployment-specific-route",
+        query: { search: "meeting notes", limit: 2, active: true },
+      },
+    });
+
+    expect(result.isError).not.toBe(true);
+    const url = new URL(String(fetchMock.mock.calls[0]?.[0]));
+    expect(url.searchParams.get("search")).toBe("meeting notes");
+    expect(url.searchParams.get("limit")).toBe("2");
+    expect(url.searchParams.get("active")).toBe("true");
+  });
+
+  it.each([{}, { team: "engineering", tags: ["meeting", "notes"] }])(
+    "accepts ingestion metadata %j",
+    async (metadata) => {
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ id: "doc-1" }), { status: 200 }),
+        );
+      const { client } = await connect(
+        { ...baseConfig, enableAdmin: true, enableWrite: true },
+        fetchMock,
+      );
+      const document = {
+        semantic_identifier: "Meeting notes",
+        sections: [{ type: "text", text: "Notes" }],
+        metadata,
+      };
+
+      const result = await client.callTool({
+        name: "onyx_admin_ingest_document",
+        arguments: { document },
+      });
+
+      expect(result.isError).not.toBe(true);
+      expect(
+        JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)).document,
+      ).toEqual(document);
+    },
+  );
+
+  it.each([{ count: 2 }, { tags: ["valid", 2] }])(
+    "rejects non-string ingestion metadata values %j",
+    async (metadata) => {
+      const fetchMock = vi.fn<typeof fetch>();
+      const { client } = await connect(
+        { ...baseConfig, enableAdmin: true, enableWrite: true },
+        fetchMock,
+      );
+
+      const result = await client.callTool({
+        name: "onyx_admin_ingest_document",
+        arguments: {
+          document: {
+            semantic_identifier: "Meeting notes",
+            sections: [{ type: "text", text: "Notes" }],
+            metadata,
+          },
+        },
+      });
+
+      expect(result.isError).toBe(true);
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
   it("enforces raw API administration and deletion gates", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const { client } = await connect(
